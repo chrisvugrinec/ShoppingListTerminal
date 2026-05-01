@@ -1,0 +1,28 @@
+# fly.toml app configuration file generated for cloudblox-chat-fe on 2026-04-29T09:49:10+02:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'cloudblox-chat-fe'
+primary_region = 'ams'
+
+[build]
+  image = 'nginx:latest'
+
+[[services]]
+  protocol = 'tcp'
+  internal_port = 80
+
+  [[services.ports]]
+    port = 80
+    handlers = ['http']
+
+  [[services.ports]]
+    port = 443
+    handlers = ['tls', 'http']
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
+  memory_mb = 1024
