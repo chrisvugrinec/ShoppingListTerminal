@@ -1,0 +1,217 @@
+{
+  "name": "terminal_todolist",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ead1b5cb-0d45-4e8d-9d74-5be56bd45623",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "taskListId": "={{ $env.MICROSOFT_TODO_LIST_ID }}",
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.microsoftToDo",
+      "typeVersion": 1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "71ee14ce-b197-4ac0-a4a3-9e0e9bad2878",
+      "name": "Get many tasks",
+      "credentials": {
+        "microsoftToDoOAuth2Api": {
+          "id": "JvwKFJPddmxLWC2g",
+          "name": "Microsoft To Do account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f96affd8-2955-49c5-9d42-ab04fef2c452",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "notStarted",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        416,
+        0
+      ],
+      "id": "fc685f97-8dca-4ecc-8d7d-b6d12e28bd17",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://trmnl.com/api/custom_plugins/{{ $env.TRMNL_PLUGIN_ID }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n   \"merge_variables\": \n      {{ $json.toJsonString() }}\n}\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        832,
+        0
+      ],
+      "id": "ca122978-b940-467b-b602-627142e72b17",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "instructions": "from this list give me an array of only the title make it a valid json object by giving each item a name: and then its value (title)\n",
+        "codeGeneratedForPrompt": "from this list give me an array of only the title make it a valid json object by giving each item a name: and then its value (title)\n",
+        "jsCode": "const items = $input.all();\nconst titles = items.map((item) => ({ name: item?.json?.title }));\n\nreturn { json: { titles } };\n"
+      },
+      "type": "n8n-nodes-base.aiTransform",
+      "typeVersion": 1,
+      "position": [
+        624,
+        0
+      ],
+      "id": "59c4e96e-936c-47da-84e5-a370ff08c7ea",
+      "name": "AI Transform"
+    },
+    {
+      "parameters": {
+        "content": "get TODO from Microsoft To Do (office account)",
+        "height": 256,
+        "width": 224
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        128,
+        -80
+      ],
+      "typeVersion": 1,
+      "id": "d14afaa1-a001-4f21-81a8-0a267ea48bbf",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "Data Transform",
+        "height": 256,
+        "width": 384
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        368,
+        -80
+      ],
+      "typeVersion": 1,
+      "id": "d12b7d37-1701-45a3-a5b1-a1f184b06605",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "Send to terminal webhook",
+        "height": 256,
+        "width": 352
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        768,
+        -80
+      ],
+      "typeVersion": 1,
+      "id": "7c3c831d-abda-47da-881f-003744b4048a",
+      "name": "Sticky Note2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get many tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many tasks": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "AI Transform",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Transform": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}
